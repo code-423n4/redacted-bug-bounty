@@ -18,7 +18,6 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 
 - [ ] Modify the contents of this `README.md` file. Describe how your code is supposed to work with links to any relevent documentation and any other criteria/details that the C4 Wardens should keep in mind when reviewing. ([Here's a well-constructed example.](https://github.com/code-423n4/2022-08-foundation#readme))
 - [ ] Optional / nice to have: pre-record a high-level overview of your protocol (not just specific smart contract functions). This saves wardens a lot of time wading through documentation.
-- [ ] [This checklist in Notion](https://code4rena.notion.site/Key-info-for-Code4rena-sponsors-f60764c4c4574bbf8e7a6dbd72cc49b4#0cafa01e6201462e9f78677a39e09746) provides some best practices for Code4rena bug bounties.
 
 ## ⭐️ Sponsor: Final touches
 - [ ] Check that images and other files used in this README have been uploaded to the repo as a file and then linked in the README using absolute path (e.g. `https://github.com/code-423n4/yourrepo-url/filepath.png`)
@@ -33,7 +32,7 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 - Max Bounty: $2,000,000 worth of WETH - TODO (make sure this is the correct way to state this)
   - Max Critical Bounty: XXX XXX 
   - Max High Bounty: XXX XXX
-  - Other Bounties: XXX XXX 
+  - Other Bounties??: XXX XXX
 - Join [C4 Discord](https://discord.gg/code4rena) to register
 - Submit findings [using the C4 form](https://code4rena.com/contests/YYYY-MM-AuditName/submit) - TODO (need submission form link which may follow a different format)
 - [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
