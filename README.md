@@ -41,7 +41,7 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 
 ## Publicly Known Issues
 
-[ ⭐️ SPONSORS: Are there any known issues or risks deemed acceptable that shouldn't lead to a valid finding? Are there any past audits? If so, list them here. ]
+[ ⭐️ SPONSORS: Are there any known issues or risks deemed acceptable that shouldn't lead to a valid finding? If so, list them here. ]
 
 
 # Project Overview
