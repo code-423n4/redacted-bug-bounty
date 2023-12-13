@@ -6,7 +6,7 @@ Bug Bounties use two repos:
 - **a _bug bounty_ repo** (this one), which is used for scoping your bug bounty and for providing information to wardens
 - **a _submissions_ repo**, where issues are submitted 
 
-Ultimately, when we launch the bug bounty, this repo will be made public and will contain links to the in-scope files to be reviewed and all the information needed for audit participants. 
+Ultimately, when we launch the bug bounty, this repo will be made public and will contain links to the in-scope files to be reviewed and all the information needed for bounty participants. 
 
 Some of the checklists in this doc are for **C4 (🐺)** and some of them are for **you as the Code Blue sponsor (⭐️)**.
 
@@ -73,14 +73,14 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 
 ## Out of scope
 
-*List any files/contracts that are out of scope for this audit.*
+*List any files/contracts that are out of scope for this bounty.*
 
 # Additional Context
 
 - [ ] Describe any novel or unique curve logic or mathematical models implemented in the contracts
 - [ ] Please list specific ERC20 that your protocol is anticipated to interact with. Could be "any" (literally anything, fee on transfer tokens, ERC777 tokens and so forth) or a list of tokens you envision using on launch.
 - [ ] Please list specific ERC721 that your protocol is anticipated to interact with.
-- [ ] Which blockchains will this code be deployed to, and are considered in scope for this audit?
+- [ ] Which blockchains will this code be deployed to, and are considered in scope for this bounty?
 - [ ] Please list all trusted roles (e.g. operators, slashers, pausers, etc.), the privileges they hold, and any conditions under which privilege escalation is expected/allowable
 - [ ] In the event of a DOS, could you outline a minimum duration after which you would consider a finding to be valid? This question is asked in the context of most systems' capacity to handle DoS attacks gracefully for a certain period.
 - [ ] Is any part of your implementation intended to conform to any EIP's? If yes, please list the contracts in this format: 
