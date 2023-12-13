@@ -2,7 +2,7 @@
 
 This `README.md` contains a set of checklists for our collaboration.
 
-Code Blue uses two repos: 
+Bug Bounties use two repos: 
 - **a _bug bounty_ repo** (this one), which is used for scoping your bug bounty and for providing information to wardens
 - **a _submissions_ repo**, where issues are submitted 
 
@@ -30,19 +30,13 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 ---
 
 # Redacted Code Blue details
-- Total Prize Pool: XXX XXX USDC (Notion: Total award pool)
-  - HM awards: XXX XXX USDC (Notion: HM (main) pool)
-  - Analysis awards: XXX XXX USDC (Notion: Analysis pool)
-  - QA awards: XXX XXX USDC (Notion: QA pool)
-  - Bot Race awards: XXX XXX USDC (Notion: Bot Race pool)
-  - Gas awards: XXX XXX USDC (Notion: Gas pool)
-  - Judge awards: XXX XXX USDC (Notion: Judge Fee)
-  - Lookout awards: XXX XXX USDC (Notion: Sum of Pre-sort fee + Pre-sort early bonus)
-  - Scout awards: $500 USDC (Notion: Scout fee - but usually $500 USDC)
-  - (this line can be removed if there is no mitigation) Mitigation Review: XXX XXX USDC (*Opportunity goes to top 3 certified wardens based on placement in this audit.*)
+- Max Bounty: $2,000,000 worth of WETH - TODO (make sure this is the correct way to state this)
+  - Max Critical Bounty: XXX XXX 
+  - Max High Bounty: XXX XXX
+  - Other Bounties: XXX XXX 
 - Join [C4 Discord](https://discord.gg/code4rena) to register
-- Submit findings [using the C4 form](https://code4rena.com/contests/YYYY-MM-AuditName/submit)
-- [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens)
+- Submit findings [using the C4 form](https://code4rena.com/contests/YYYY-MM-AuditName/submit) - TODO (need submission form link which may follow a different format)
+- [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
 - Starts December 15, 2023 20:00 UTC
 
 ## Publicly Known Issues
