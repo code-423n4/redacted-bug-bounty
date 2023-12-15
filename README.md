@@ -41,6 +41,8 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 - [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
 - Starts December 15, 2023 20:00 UTC
 
+❗ _Note for participants:  The sponsor's repo, scope definition, and contents herein are all subject to change._
+
 ## Publicly Known Issues
 
 [ ⭐️ SPONSORS: Are there any known issues or risks deemed acceptable that shouldn't lead to a valid finding? If so, list them here. ]
