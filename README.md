@@ -41,6 +41,8 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 - [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
 - Starts December 15, 2023 20:00 UTC
 
+❗ _Note for participants:  The sponsor's repo, scope definition, and contents herein are all subject to change._
+
 ## Publicly Known Issues
 
 - **Centralization Risks**: Some methods are only accesible by the Redacted DAO multisig, which is the sole owner of the contracts (such as `emergencyWithdraw`). This is acceptable as the multisig is controlled by the Redacted DAO, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
