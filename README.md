@@ -30,12 +30,12 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 
 ---
 
-# Redacted Code Blue details
+# Redacted Code Blue Details
 
-- Max Bounty: $2,000,000 worth of WETH - TODO (make sure this is the correct way to state this)
-  - Max Critical Bounty: XXX XXX
-  - Max High Bounty: XXX XXX
-  - Other Bounties??: XXX XXX
+- Max Bounty: $500,000 worth of WETH
+  - Max Critical Bounty: $500,000 worth of WETH
+  - Max High Bounty: $30,000 worth of WETH
+  - Other Bounties: Up to $10,000 worth of WETH based on severity
 - Join [C4 Discord](https://discord.gg/code4rena) to register
 - Submit findings [using the C4 form](https://code4rena.com/contests/YYYY-MM-AuditName/submit) - TODO (need submission form link which may follow a different format)
 - [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
@@ -43,7 +43,15 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 
 ## Publicly Known Issues
 
-[ ⭐️ SPONSORS: Are there any known issues or risks deemed acceptable that shouldn't lead to a valid finding? If so, list them here. ]
+- **Centralization Risks**: Some methods are only accesible by the Redacted DAO multisig, which is the sole owner of the contracts (such as `emergencyWithdraw`). This is acceptable as the multisig is controlled by the Redacted DAO, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
+
+- **ERC1155 Mint Re-entrancy**: The contract is not vulnerable to reentrancy attacks because the contract does not hold any funds and does not call any external contracts in the same transaction as the mint call. The contract is also not vulnerable to reentrancy attacks because the contract does not use any state variables that can be modified by an external contract in the same transaction as the mint call.
+
+- **Deposit Front Running**: This issue is mitigated by pushing all validators into queue via access control once they have an effective balance of 1 ETH, meaning they have already been registered with the canonical deposit contract.
+
+- **Allowances and `OPERATOR_ROLE`**: The `OPERATOR_ROLE` is able to set allowances for `pxETH`. This role only given to the `PirexETH` contract and is used to facilitate fee distribution. The `OPERATOR_ROLE` is not given to any external contracts or accounts.
+
+- **Effects of `setContract` on State**: Changing withdrawal credentials aka the `rewardRecipient` contract address could corrupt state. For example, if there are initialised validators and `rewardRecipient` is changed via `setContract`, then functions like `getInitializedValidatorAt` may return incorrect withdrawal credentials. This is mitigated by the fact that `setContract` can ony be called by the owner (Redacted DAO multisig) which does extensive due diligence before executing any transactions, and `rewardRecipient` is not expected to change.
 
 # Pirex ETH Overview
 
@@ -53,9 +61,9 @@ Pirex ETH is built on top of the Redacted DAO’s Pirex platform and forms the f
 
 When depositing ETH, users can choose between holding pxETH or depositing to an auto compounding rewards vault for apxETH.
 
-pxETH is for those willing to forgo staking yield for liquidity. When users choose to hold pxETH, they’re opting to hold an ETH-pegged asset that can take advantage of opportunities throughout DeFi. These include providing liquidity, participating in lending protocols, and more. The Redacted DAO will be using its treasury and BTRFLY incentives to expand such opportunities for pxETH holders.
+**pxETH** is for those willing to forgo staking yield for liquidity. When users choose to hold pxETH, they’re opting to hold an ETH-pegged asset that can take advantage of opportunities throughout DeFi. These include providing liquidity, participating in lending protocols, and more. The Redacted DAO will be using its treasury and BTRFLY incentives to expand such opportunities for pxETH holders.
 
-apxETH is for users focused on maximizing their staking yields. After minting pxETH, users can deposit to Dinero's auto-compounding rewards vault to enjoy boosted staking yields without the hassle of running their own validators. Since some users will choose to hold pxETH, each apxETH benefits from staking rewards from more than one staked ETH, amplifying the yield for apxETH users.
+**apxETH** is for users focused on maximizing their staking yields. After minting pxETH, users can deposit to Dinero's auto-compounding rewards vault to enjoy boosted staking yields without the hassle of running their own validators. Since some users will choose to hold pxETH, each apxETH benefits from staking rewards from more than one staked ETH, amplifying the yield for apxETH users.
 
 ### Deposits and the ETH Buffer
 
@@ -80,6 +88,8 @@ Users decide how many reward cycles they tokenize. These tokens can be used thro
 
 ## Links
 
+<!-- @0xKubko @0xhafa please review -->
+
 - **Previous audits:**
   - [Spearbit - PirexETH](https://github.com/redacted-cartel/audits/blob/master/dinero-pirex-eth/pirex-eth/spearbit.pdf) ([@spearbitdao](https://twitter.com/spearbitdao))
   - [Pashov - PirexETH](https://github.com/redacted-cartel/audits/blob/master/dinero-pirex-eth/pirex-eth/pashov.pdf) ([@pashovkrum](https://twitter.com/pashovkrum))
@@ -92,6 +102,8 @@ Users decide how many reward cycles they tokenize. These tokens can be used thro
 - **Discord:** https://discord.gg/redactedcartel
 
 # Scope
+
+<!-- @0xKubko @0xhafa please populate contracts/descriptions -->
 
 [ ⭐️ SPONSORS: add scoping and technical details here ]
 
@@ -108,34 +120,62 @@ _List all files in scope in the table below (along with hyperlinks) -- and feel 
 
 ## Out of scope
 
-_List any files/contracts that are out of scope for this bounty._
+<!-- @drahrealm @dhruvinparikh please review -->
+
+Contracts:
+
+- `ChainlinkFunctionsOracleAdapter.sol`
+
+Vendor Libraries:
+
+- `chainlink`
+- `solidty-cborutils`
+- `@ensdomains/buffer`
 
 # Additional Context
 
-- [ ] Describe any novel or unique curve logic or mathematical models implemented in the contracts
-- [ ] Please list specific ERC20 that your protocol is anticipated to interact with. Could be "any" (literally anything, fee on transfer tokens, ERC777 tokens and so forth) or a list of tokens you envision using on launch.
-- [ ] Please list specific ERC721 that your protocol is anticipated to interact with.
-- [ ] Which blockchains will this code be deployed to, and are considered in scope for this bounty?
-- [ ] Please list all trusted roles (e.g. operators, slashers, pausers, etc.), the privileges they hold, and any conditions under which privilege escalation is expected/allowable
-- [ ] In the event of a DOS, could you outline a minimum duration after which you would consider a finding to be valid? This question is asked in the context of most systems' capacity to handle DoS attacks gracefully for a certain period.
-- [ ] Is any part of your implementation intended to conform to any EIP's? If yes, please list the contracts in this format:
-  - `Contract1`: Should comply with `ERC/EIPX`
-  - `Contract2`: Should comply with `ERC/EIPY`
+- Trusted Roles
+
+  - `DEFAULT_ADMIN_ROLE`: Set external contract addresses
+  - `GOVERNANCE_ROLE`: Manages validator queue, set fee params, pause deposits to beacon chain deposit contract
+  - `KEEPER_ROLE`: Harvest rewards, update status when a validator is slashed and top up validator stake when active balance goes below effective balance
+  - `OPERATOR_ROLE`: Allows `PirexETH` to perform specific internal actions (eg. approve allowances for fee distribution)
+  - `ORACLE_ROLE`: Updates the state of the validator when it is dissolved
+  - `MINTER_ROLE`: Allows `PirexETH` to mint `pxETH` and `apxETH`
+  - `BURNER_ROLE`: Allows `PirexETH` to burn `pxETH` and `apxETH`
+
+- EIP Specifications:
+
+  - `pxETH`: Should comply with `ERC-20` standard
+  - `apxEth`: Should comply with `ERC-4626` standard
+  - `upxETH` (Unlocking) and `RFN` (Yield Stripping): Should comply with `ERC-1155` standard
+
+- In the event of DOS, we would consider a finding to be valid if it is reproducible for a minimum duration of 4 hours.
 
 ## Attack ideas (Where to look for bugs)
+
+<!-- cc: @drahrealm @dhruvinparikh @0xhafa -->
 
 _List specific areas to address - see [this blog post](https://medium.com/code4rena/the-security-council-elections-within-the-arbitrum-dao-a-comprehensive-guide-aa6d001aae60#9adb) for an example_
 
 ## Main invariants
 
-_Describe the project's main invariants (properties that should NEVER EVER be broken)._
+- Setting and updating contract addresses (`pxETH` address, etc) which are controlled by the `DEFAULT_ADMIN_ROLE`
+- `pxETH` and `apxETH` are minted and burned in a 1:1 ratio
+- `outstandingRedemptions`
+- `pendingWithdrawal`
+- `pendingDeposits`
 
 ## Scoping Details
 
+<!-- @0xKubko @0xhafa please complete -->
+
 [ ⭐️ SPONSORS: please confirm/edit the information below. ]
 
+<!-- ND: should we open source contracts -->
+
 ```
-- If you have a public code repo, please share it here:
+- If you have a public code repo, please share it here: https://github.com/redacted-cartel/pirex-eth-contracts
 - How many contracts are in scope?:
 - Total SLoC for these contracts?:
 - How many external imports are there?:
@@ -156,6 +196,15 @@ _Describe the project's main invariants (properties that should NEVER EVER be br
 
 # Tests
 
-_Provide every step required to build the project from a fresh git clone, as well as steps to run the tests with a gas report._
+<!-- cc: @drahrealm @dhruvinparikh -->
 
-_Note: Many wardens run Slither as a first pass for testing. Please document any known errors with no workaround._
+### Foundry
+
+- Install dependencies `npm i`
+- Install forge thru Foundry (see: https://github.com/foundry-rs/foundry)
+- Make sure to fill out `scripts/loadEnv.sh` with the correct env variables as seen in `loadEnv.example.sh`
+- Run the test with `scripts/forgeTest.sh`
+
+### Slither
+
+We don’t actually run slither locally but it’s part of the CI thru Github Action. For slither related findings/reports, all of them are known and part of the design (like sending ether to arbitrary address, which is required for the protocol to work) (edited)
