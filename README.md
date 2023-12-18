@@ -198,13 +198,13 @@ Vendor Libraries:
 
 ```
 - If you have a public code repo, please share it here: https://github.com/redacted-cartel/pirex-eth-contracts
-- How many contracts are in scope?:
-- Total SLoC for these contracts?:
-- How many external imports are there?:
-- How many separate interfaces and struct definitions are there for the contracts within scope?:
-- Does most of your code generally use composition or inheritance?: Inheritance
+- How many contracts are in scope?: 17
+- Total SLoC for these contracts?: 3519
+- How many external imports are there?: 21
+- How many separate interfaces and struct definitions are there for the contracts within scope?: 5 interfaces & 3 structs 
+- Does most of your code generally use composition or inheritance?: Yes, inheritance
 - How many external calls?: 1 - Beacon Chain Deposit Contract
-- What is the overall line coverage percentage provided by your tests?:
+- What is the overall line coverage percentage provided by your tests?: 99.8%
 - Is this an upgrade of an existing system?: No
 - Check all that apply (e.g. timelock, NFT, AMM, ERC20, rollups, etc.): ERC-20, ERC-1155, ERC-4626
 - Is there a need to understand a separate part of the codebase / get context in order to audit this part of the protocol?:
