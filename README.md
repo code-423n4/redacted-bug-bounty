@@ -32,10 +32,7 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 
 # Redacted Code Blue details
 
-- Max Bounty: $2,000,000 worth of WETH - TODO (make sure this is the correct way to state this)
-  - Max Critical Bounty: XXX XXX
-  - Max High Bounty: XXX XXX
-  - Other Bounties??: XXX XXX
+- Max Bounty: $500,000 
 - Join [C4 Discord](https://discord.gg/code4rena) to register
 - Submit findings [using the C4 form](https://code4rena.com/contests/YYYY-MM-AuditName/submit) - TODO (need submission form link which may follow a different format)
 - [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
