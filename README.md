@@ -41,19 +41,21 @@ Some of the checklists in this doc are for **C4 (🐺)** and some of them are fo
 - [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
 - Starts December 15, 2023 20:00 UTC
 
-❗ _Note for participants:  The sponsor's repo, scope definition, and contents herein are all subject to change._
+❗ _Note for participants: The sponsor's repo, scope definition, and contents herein are all subject to change._
 
 ## Publicly Known Issues
 
-- **Centralization Risks**: Some methods are only accesible by the Redacted DAO multisig, which is the sole owner of the contracts (such as `emergencyWithdraw`). This is acceptable as the multisig is controlled by the Redacted DAO, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
+- **Centralization Risks**: Some methods (such as `emergencyWithdraw`) are only accessible by the Redacted DAO multisig, which is the sole owner of the contracts. This is acceptable as the multisig is controlled by the Redacted DAO, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
 
-- **ERC1155 Mint Re-entrancy**: The contract is not vulnerable to reentrancy attacks because the contract does not hold any funds and does not call any external contracts in the same transaction as the mint call. The contract is also not vulnerable to reentrancy attacks because the contract does not use any state variables that can be modified by an external contract in the same transaction as the mint call.
+- **ERC-1155 Mint Re-entrancy**: The contract is not vulnerable to reentrancy attacks because the contract does not hold any funds and does not call any external contracts in the same transaction as the mint call. The contract is also not vulnerable to re-entrancy attacks because the contract does not use any state variables that can be modified by an external contract in the same transaction as the mint call.
 
-- **Deposit Front Running**: This issue is mitigated by pushing all validators into queue via access control once they have an effective balance of 1 ETH, meaning they have already been registered with the canonical deposit contract.
+- **Deposit Front Running**: This issue is mitigated by pushing all validators into queue via access control once they have an effective balance of 1 ETH, meaning they have already been registered with the canonical beacon chain deposit contract.
 
-- **Allowances and `OPERATOR_ROLE`**: The `OPERATOR_ROLE` is able to set allowances for `pxETH`. This role only given to the `PirexETH` contract and is used to facilitate fee distribution. The `OPERATOR_ROLE` is not given to any external contracts or accounts.
+- **Allowances and `OPERATOR_ROLE`**: The `OPERATOR_ROLE` is able to set allowances for `pxETH`. This role _only_ given to the `PirexETH` contract and is used to facilitate fee distribution. The `OPERATOR_ROLE` is not given to any external contracts or accounts.
 
 - **Effects of `setContract` on State**: Changing withdrawal credentials aka the `rewardRecipient` contract address could corrupt state. For example, if there are initialised validators and `rewardRecipient` is changed via `setContract`, then functions like `getInitializedValidatorAt` may return incorrect withdrawal credentials. This is mitigated by the fact that `setContract` can ony be called by the owner (Redacted DAO multisig) which does extensive due diligence before executing any transactions, and `rewardRecipient` is not expected to change.
+
+> Note: We have acknowledged all findings in referenced Audits and have either fixed them or have mitigated them. These functions are required for the protocol to work as intended.
 
 # Pirex ETH Overview
 
@@ -63,9 +65,9 @@ Pirex ETH is built on top of the Redacted DAO’s Pirex platform and forms the f
 
 When depositing ETH, users can choose between holding pxETH or depositing to an auto compounding rewards vault for apxETH.
 
-**pxETH** is for those willing to forgo staking yield for liquidity. When users choose to hold pxETH, they’re opting to hold an ETH-pegged asset that can take advantage of opportunities throughout DeFi. These include providing liquidity, participating in lending protocols, and more. The Redacted DAO will be using its treasury and BTRFLY incentives to expand such opportunities for pxETH holders.
+- **pxETH** is for those willing to forgo staking yield for liquidity. When users choose to hold pxETH, they’re opting to hold an ETH-pegged asset that can take advantage of opportunities throughout DeFi. These include providing liquidity, participating in lending protocols, and more. The Redacted DAO will be using its treasury and BTRFLY incentives to expand such opportunities for pxETH holders.
 
-**apxETH** is for users focused on maximizing their staking yields. After minting pxETH, users can deposit to Dinero's auto-compounding rewards vault to enjoy boosted staking yields without the hassle of running their own validators. Since some users will choose to hold pxETH, each apxETH benefits from staking rewards from more than one staked ETH, amplifying the yield for apxETH users.
+- **apxETH** is for users focused on maximizing their staking yields. After minting pxETH, users can deposit to Dinero's auto-compounding rewards vault to enjoy boosted staking yields without the hassle of running their own validators. Since some users will choose to hold pxETH, each apxETH benefits from staking rewards from more than one staked ETH, amplifying the yield for apxETH users.
 
 ### Deposits and the ETH Buffer
 
@@ -96,7 +98,7 @@ Users decide how many reward cycles they tokenize. These tokens can be used thro
   - [Spearbit - PirexETH](https://github.com/redacted-cartel/audits/blob/master/dinero-pirex-eth/pirex-eth/spearbit.pdf) ([@spearbitdao](https://twitter.com/spearbitdao))
   - [Pashov - PirexETH](https://github.com/redacted-cartel/audits/blob/master/dinero-pirex-eth/pirex-eth/pashov.pdf) ([@pashovkrum](https://twitter.com/pashovkrum))
 - **Documentation:**
-  - [PirexETH & Dinero Documentaion](https://dineroismoney.com/docs)
+  - [PirexETH & Dinero Documentation](https://dineroismoney.com/docs)
   - [PirexETH Whitepaper](https://dineroismoney.com/whitepaper)
   - [Dinero Litepaper](https://github.com/redacted-cartel/dinero-litepaper)
 - **Website:** https://dineroismoney.com
@@ -122,7 +124,7 @@ _List all files in scope in the table below (along with hyperlinks) -- and feel 
 
 ## Out of scope
 
-<!-- @drahrealm @dhruvinparikh please review -->
+<!-- @drahrealm @dhruvinparikh @0xKubko please review -->
 
 Contracts:
 
@@ -158,7 +160,8 @@ Vendor Libraries:
 
 <!-- cc: @drahrealm @dhruvinparikh @0xhafa -->
 
-_List specific areas to address - see [this blog post](https://medium.com/code4rena/the-security-council-elections-within-the-arbitrum-dao-a-comprehensive-guide-aa6d001aae60#9adb) for an example_
+- Where funds are entering/exiting protocol
+  - TODO: Add links to relevant contracts
 
 ## Main invariants
 
@@ -182,17 +185,15 @@ _List specific areas to address - see [this blog post](https://medium.com/code4r
 - Total SLoC for these contracts?:
 - How many external imports are there?:
 - How many separate interfaces and struct definitions are there for the contracts within scope?:
-- Does most of your code generally use composition or inheritance?:
-- How many external calls?:
+- Does most of your code generally use composition or inheritance?: Inheritance
+- How many external calls?: 1 - Beacon Chain Deposit Contract
 - What is the overall line coverage percentage provided by your tests?:
-- Is this an upgrade of an existing system?:
-- Check all that apply (e.g. timelock, NFT, AMM, ERC20, rollups, etc.):
+- Is this an upgrade of an existing system?: No
+- Check all that apply (e.g. timelock, NFT, AMM, ERC20, rollups, etc.): ERC-20, ERC-1155, ERC-4626
 - Is there a need to understand a separate part of the codebase / get context in order to audit this part of the protocol?:
 - Please describe required context:
-- Does it use an oracle?:
-- Describe any novel or unique curve logic or mathematical models your code uses:
-- Is this either a fork of or an alternate implementation of another project?:
-- Does it use a side-chain?:
+- Does it use an oracle?: Yes - Chainlink for triggering dissolve validator
+- Does it use a side-chain?: No
 - Describe any specific areas you would like addressed:
 ```
 
