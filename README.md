@@ -1,35 +1,3 @@
-# ✨ So you want to run a bug bounty
-
-This `README.md` contains a set of checklists for our collaboration.
-
-Bug Bounties use two repos:
-
-- **a _bug bounty_ repo** (this one), which is used for scoping your bug bounty and for providing information to wardens
-- **a _submissions_ repo**, where issues are submitted
-
-Ultimately, when we launch the bug bounty, this repo will be made public and will contain links to the in-scope files to be reviewed and all the information needed for bounty participants.
-
-Some of the checklists in this doc are for **C4 (🐺)** and some of them are for **you as the Code Blue sponsor (⭐️)**.
-
----
-
-# Repo setup
-
-## ⭐️ Sponsor: Edit this `README.md` file
-
-- [ ] Modify the contents of this `README.md` file. Describe how your code is supposed to work with links to any relevent documentation and any other criteria/details that the C4 Wardens should keep in mind when reviewing. ([Here's a well-constructed example.](https://github.com/code-423n4/2022-08-foundation#readme))
-- [ ] Optional / nice to have: pre-record a high-level overview of your protocol (not just specific smart contract functions). This saves wardens a lot of time wading through documentation.
-
-## ⭐️ Sponsor: Final touches
-
-- [ ] Check that images and other files used in this README have been uploaded to the repo as a file and then linked in the README using absolute path (e.g. `https://github.com/code-423n4/yourrepo-url/filepath.png`)
-- [ ] Ensure that _all_ links and image/file paths in this README use absolute paths, not relative paths
-- [ ] Check that all README information is in markdown format (HTML does not render on Code4rena.com)
-- [ ] Remove any part of this template that's not relevant to the final version of the README (e.g. instructions in brackets and italic)
-- [ ] Delete this checklist and all text above the line below when you're ready.
-
----
-
 # Redacted Code Blue Details
 
 - Max Bounty: $500,000 worth of WETH
@@ -92,8 +60,6 @@ Users decide how many reward cycles they tokenize. These tokens can be used thro
 
 ## Links
 
-<!-- @0xKubko @0xhafa please review -->
-
 - **Previous audits:**
   - [Spearbit - PirexETH](https://github.com/redacted-cartel/audits/blob/master/dinero-pirex-eth/pirex-eth/spearbit.pdf) ([@spearbitdao](https://twitter.com/spearbitdao))
   - [Pashov - PirexETH](https://github.com/redacted-cartel/audits/blob/master/dinero-pirex-eth/pirex-eth/pashov.pdf) ([@pashovkrum](https://twitter.com/pashovkrum))
@@ -107,57 +73,43 @@ Users decide how many reward cycles they tokenize. These tokens can be used thro
 
 # Scope
 
-<!-- @0xKubko @0xhafa please populate contracts/descriptions -->
-<!-- contract links are pointing to old public files, sloc is correct, files need to be updated on the public repo -->
-
-[ ⭐️ SPONSORS: add scoping and technical details here ]
-
-- [ ] In the table format shown below, provide the name of each contract and:
-  - [ ] source lines of code (excluding blank lines and comments) in each _For line of code counts, we recommend running prettier with a 100-character line length, and using [cloc](https://github.com/AlDanial/cloc)._
-  - [ ] external contracts called in each
-  - [ ] libraries used in each
-
-_List all files in scope in the table below (along with hyperlinks) -- and feel free to add notes here to emphasize areas of focus._
-
 This is the complete list of what's in scope for this contest:
 
-| Contract                                                                                                                                | SLOC | Purpose                                                                                                                                                                                                                                             | Libraries used                                                                                                                          |
-|-----------------------------------------------------------------------------------------------------------------------------------------|------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| [src/AutoPxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/AutoPxEth.sol)                               | 489  | This contract enables autocompounding for pxETH assets and includes various fee mechanisms.                                                                                                                                                         | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/DineroERC20.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/DineroERC20.sol)                           | 77   | A Standard ERC20 token with minting and burning with access control.                                                                                                                                                                                | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/OracleAdapter.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/OracleAdapter.sol)                       | 112  | This contract facilitates interactions between PirexEth, the reward recipient, and oracles for managing validators.                                                                                                                                 | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)                                                        |
-| [src/PirexEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexEth.sol)                                 | 552  | This contract manages various interactions with pxETH, such as deposits, redemptions, and fee adjustments.                                                                                                                                          | [solmate](https://github.com/transmissions11/solmate)                                                                                   |
-| [src/PirexEthValidators.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexEthValidators.sol)             | 1063 | This contract includes functionality for handling validator-related operations and deposits.                                                                                                                                                        | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/PirexFees.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexFees.sol)                               | 86   | This contract manages the distribution of protocol fees to assigned recipient.                                                                                                                                                                      | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/PxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PxEth.sol)                                       | 51   | This contract manages the PxEth token, the main token for the PirexEth system used in the Dinero ecosystem. It extends the DineroERC20 contract and includes additional functionality.                                                              | None                                                                                                                                    |
-| [src/RewardRecipient.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/RewardRecipient.sol)                   | 158  | This contract manages rewards for validators and handles associated functionalities.                                                                                                                                                                | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) |
+| Contract                                                                                                                                      | SLOC | Purpose                                                                                                                                                                                                                                             | Libraries used                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| [src/AutoPxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/AutoPxEth.sol)                                     | 489  | This contract enables autocompounding for pxETH assets and includes various fee mechanisms.                                                                                                                                                         | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
+| [src/DineroERC20.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/DineroERC20.sol)                                 | 77   | A Standard ERC20 token with minting and burning with access control.                                                                                                                                                                                | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
+| [src/OracleAdapter.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/OracleAdapter.sol)                             | 112  | This contract facilitates interactions between PirexEth, the reward recipient, and oracles for managing validators.                                                                                                                                 | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)                                                        |
+| [src/PirexEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexEth.sol)                                       | 552  | This contract manages various interactions with pxETH, such as deposits, redemptions, and fee adjustments.                                                                                                                                          | [solmate](https://github.com/transmissions11/solmate)                                                                                   |
+| [src/PirexEthValidators.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexEthValidators.sol)                   | 1063 | This contract includes functionality for handling validator-related operations and deposits.                                                                                                                                                        | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
+| [src/PirexFees.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexFees.sol)                                     | 86   | This contract manages the distribution of protocol fees to assigned recipient.                                                                                                                                                                      | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
+| [src/PxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PxEth.sol)                                             | 51   | This contract manages the PxEth token, the main token for the PirexEth system used in the Dinero ecosystem. It extends the DineroERC20 contract and includes additional functionality.                                                              | None                                                                                                                                    |
+| [src/RewardRecipient.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/RewardRecipient.sol)                         | 158  | This contract manages rewards for validators and handles associated functionalities.                                                                                                                                                                | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)                                                        |
 | [src/interfaces/IDepositContract.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IDepositContract.sol) | 24   | This is the Ethereum 2.0 deposit contract interface.                                                                                                                                                                                                | None                                                                                                                                    |
-| [src/interfaces/IOracleAdapter.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IOracleAdapter.sol) | 18   | This interface defines the methods for interacting with OracleAdapter.                                                                                                                                                                              | None                                                                                                                                    |
-| [src/interfaces/IPirexEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IPirexEth.sol)         | 61   | This interface defines the methods for interacting with PirexEth.                                                                                                                                                                                   | None                                                                                                                                    |
-| [src/interfaces/IPirexFees.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IPirexFees.sol)       | 23   | This interface defines functions related to the distribution of fees in the Pirex protocol.                                                                                                                                                         | None                                                                                                                                    |
+| [src/interfaces/IOracleAdapter.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IOracleAdapter.sol)     | 18   | This interface defines the methods for interacting with OracleAdapter.                                                                                                                                                                              | None                                                                                                                                    |
+| [src/interfaces/IPirexEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IPirexEth.sol)               | 61   | This interface defines the methods for interacting with PirexEth.                                                                                                                                                                                   | None                                                                                                                                    |
+| [src/interfaces/IPirexFees.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IPirexFees.sol)             | 23   | This interface defines functions related to the distribution of fees in the Pirex protocol.                                                                                                                                                         | None                                                                                                                                    |
 | [src/interfaces/IRewardRecipient.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/interfaces/IRewardRecipient.sol) | 40   | This interface defines functions related to dissolving and slashing validators in the Pirex protocol.                                                                                                                                               | None                                                                                                                                    |
-| [src/libraries/DataTypes.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/DataTypes.sol)           | 87   | This library provides data structures and enums crucial for the functionality of the Pirex protocol.                                                                                                                                                | None                                                                                                                                    |
-| [src/libraries/Errors.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/Errors.sol)                 | 204  | This interface defines errors that might occur in the PirexEth system.                                                                                                                                                                              | None                                                                                                                                    |
-| [src/libraries/ValidatorQueue.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol) | 347  | This library provides functions for adding, swapping, and removing validators in the validator queue. It also includes functions for popping validators from the end of the queue, retrieving validator information, and clearing the entire queue. | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) |
-| [src/tokens/UpxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                       | 127  | This is a semi-fungible ERC1155 token contract with minting and burning capabilities, using AccessControl for role-based access.                                                                                                                    | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| Total  | 3519 | | |
+| [src/libraries/DataTypes.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/DataTypes.sol)                 | 87   | This library provides data structures and enums crucial for the functionality of the Pirex protocol.                                                                                                                                                | None                                                                                                                                    |
+| [src/libraries/Errors.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/Errors.sol)                       | 204  | This interface defines errors that might occur in the PirexEth system.                                                                                                                                                                              | None                                                                                                                                    |
+| [src/libraries/ValidatorQueue.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol)       | 347  | This library provides functions for adding, swapping, and removing validators in the validator queue. It also includes functions for popping validators from the end of the queue, retrieving validator information, and clearing the entire queue. | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)                                                        |
+| [src/tokens/UpxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                             | 127  | This is a semi-fungible ERC1155 token contract with minting and burning capabilities, using AccessControl for role-based access.                                                                                                                    | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
+| Total                                                                                                                                         | 3519 |                                                                                                                                                                                                                                                     |                                                                                                                                         |
 
 This is a list of mainnet contract deployments:
 
-| Contract                                                                                                                 | Documentation                                                                                                                              | Mainnet Deployment                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------ |--------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| [src/AutoPxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/AutoPxEth.sol)                  | [AutoPxEth.sol](https://dineroismoney.com/docs/auto-px-eth-sol)                                                                            | <a href="https://etherscan.io/address/0x9Ba021B0a9b958B5E75cE9f6dff97C7eE52cb3E6" target="_blank">0x9Ba021B0a9b958B5E75cE9f6dff97C7eE52cb3E6</a>  |
-| [src/OracleAdapter.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/OracleAdapter.sol)          | [OracleAdapter](https://dineroismoney.com/docs/oracle-adapter-sol)                                                                         | <a href="https://etherscan.io/address/0x15f1203aFb3Ba2BFf383Dc0a3d5a781DedEB44fC" target="_blank">0x15f1203aFb3Ba2BFf383Dc0a3d5a781DedEB44fC</a>  |
-| [src/PirexEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexEth.sol)                    | [PirexEth.sol](https://dineroismoney.com/docs/pirex-eth-sol)                                                                               | <a href="https://etherscan.io/address/0xD664b74274DfEB538d9baC494F3a4760828B02b0" target="_blank">0xD664b74274DfEB538d9baC494F3a4760828B02b0</a>  |
-| [src/PirexFees.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexFees.sol)                    | [PirexFees.sol](https://dineroismoney.com/docs/pirex-fees-sol)                                                                             | <a href="https://etherscan.io/address/0x177D685384AA1Ac5ABA41b7E649F9fA0Be717fdb" target="_blank">0x177D685384AA1Ac5ABA41b7E649F9fA0Be717fdb</a> |
-| [src/PxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PxEth.sol)                        | [PxEth.sol](https://dineroismoney.com/docs/px-eth-sol)                                                                                     | <a href="https://etherscan.io/address/0x04C154b66CB340F3Ae24111CC767e0184Ed00Cc6" target="_blank">0x04C154b66CB340F3Ae24111CC767e0184Ed00Cc6</a> |
-| [src/RewardRecipient.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/RewardRecipient.sol)         | [RewardRecipient.sol](https://dineroismoney.com/docs/reward-recipient-sol)                                                                 | <a href="https://etherscan.io/address/0xCd615270aB3a7a3A262A4E49935D002278C76b78" target="_blank">0xCd615270aB3a7a3A262A4E49935D002278C76b78</a> |
-| [src/libraries/ValidatorQueue.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol)      | (Implementation) [ValidatorQueue.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol) | <a href="https://etherscan.io/address/0x9E0d7D79735e1c63333128149c7b616a0dC0bBDb" target="_blank">0x9E0d7D79735e1c63333128149c7b616a0dC0bBDb</a> |
-| [src/tokens/UpxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)       | (Implementation) [UpxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                    | <a href="https://etherscan.io/address/0x5BF2419a33f82F4C1f075B4006d7fC4104C43868" target="_blank">0x5BF2419a33f82F4C1f075B4006d7fC4104C43868</a> |
+| Contract                                                                                                                                | Documentation                                                                                                                              | Mainnet Deployment                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [src/AutoPxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/AutoPxEth.sol)                               | [AutoPxEth.sol](https://dineroismoney.com/docs/auto-px-eth-sol)                                                                            | <a href="https://etherscan.io/address/0x9Ba021B0a9b958B5E75cE9f6dff97C7eE52cb3E6" target="_blank">0x9Ba021B0a9b958B5E75cE9f6dff97C7eE52cb3E6</a> |
+| [src/OracleAdapter.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/OracleAdapter.sol)                       | [OracleAdapter](https://dineroismoney.com/docs/oracle-adapter-sol)                                                                         | <a href="https://etherscan.io/address/0x15f1203aFb3Ba2BFf383Dc0a3d5a781DedEB44fC" target="_blank">0x15f1203aFb3Ba2BFf383Dc0a3d5a781DedEB44fC</a> |
+| [src/PirexEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexEth.sol)                                 | [PirexEth.sol](https://dineroismoney.com/docs/pirex-eth-sol)                                                                               | <a href="https://etherscan.io/address/0xD664b74274DfEB538d9baC494F3a4760828B02b0" target="_blank">0xD664b74274DfEB538d9baC494F3a4760828B02b0</a> |
+| [src/PirexFees.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PirexFees.sol)                               | [PirexFees.sol](https://dineroismoney.com/docs/pirex-fees-sol)                                                                             | <a href="https://etherscan.io/address/0x177D685384AA1Ac5ABA41b7E649F9fA0Be717fdb" target="_blank">0x177D685384AA1Ac5ABA41b7E649F9fA0Be717fdb</a> |
+| [src/PxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/PxEth.sol)                                       | [PxEth.sol](https://dineroismoney.com/docs/px-eth-sol)                                                                                     | <a href="https://etherscan.io/address/0x04C154b66CB340F3Ae24111CC767e0184Ed00Cc6" target="_blank">0x04C154b66CB340F3Ae24111CC767e0184Ed00Cc6</a> |
+| [src/RewardRecipient.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/RewardRecipient.sol)                   | [RewardRecipient.sol](https://dineroismoney.com/docs/reward-recipient-sol)                                                                 | <a href="https://etherscan.io/address/0xCd615270aB3a7a3A262A4E49935D002278C76b78" target="_blank">0xCd615270aB3a7a3A262A4E49935D002278C76b78</a> |
+| [src/libraries/ValidatorQueue.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol) | (Implementation) [ValidatorQueue.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol) | <a href="https://etherscan.io/address/0x9E0d7D79735e1c63333128149c7b616a0dC0bBDb" target="_blank">0x9E0d7D79735e1c63333128149c7b616a0dC0bBDb</a> |
+| [src/tokens/UpxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                       | (Implementation) [UpxEth.sol](https://github.com/redacted-cartel/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                    | <a href="https://etherscan.io/address/0x5BF2419a33f82F4C1f075B4006d7fC4104C43868" target="_blank">0x5BF2419a33f82F4C1f075B4006d7fC4104C43868</a> |
 
 ## Out of scope
-
-<!-- @drahrealm @dhruvinparikh @0xKubko please review -->
 
 Contracts:
 
@@ -189,12 +141,13 @@ Vendor Libraries:
 
 - In the event of DOS, we would consider a finding to be valid if it is reproducible for a minimum duration of 4 hours.
 
+<!-- Note: will add retroactively
+
 ## Attack ideas (Where to look for bugs)
 
-<!-- cc: @drahrealm @dhruvinparikh @0xhafa -->
-
 - Where funds are entering/exiting protocol
-  - TODO: Add links to relevant contracts
+
+-->
 
 ## Main invariants
 
@@ -206,18 +159,11 @@ Vendor Libraries:
 
 ## Scoping Details
 
-<!-- @0xKubko @0xhafa please complete -->
-
-[ ⭐️ SPONSORS: please confirm/edit the information below. ]
-
-<!-- ND: should we open source contracts -->
-
-```
 - If you have a public code repo, please share it here: https://github.com/redacted-cartel/pirex-eth-contracts
 - How many contracts are in scope?: 17
 - Total SLoC for these contracts?: 3519
 - How many external imports are there?: 21
-- How many separate interfaces and struct definitions are there for the contracts within scope?: 5 interfaces & 3 structs 
+- How many separate interfaces and struct definitions are there for the contracts within scope?: 5 interfaces & 3 structs
 - Does most of your code generally use composition or inheritance?: Yes, inheritance
 - How many external calls?: 1 - Beacon Chain Deposit Contract
 - What is the overall line coverage percentage provided by your tests?: 99.8%
@@ -228,11 +174,10 @@ Vendor Libraries:
 - Does it use an oracle?: Yes - Chainlink for triggering dissolve validator
 - Does it use a side-chain?: No
 - Describe any specific areas you would like addressed:
-```
+
+<!-- Note: Our public repo does not currenly include tests, but we will provide access and instructions to wardens.
 
 # Tests
-
-<!-- cc: @drahrealm @dhruvinparikh -->
 
 ### Foundry
 
@@ -243,4 +188,4 @@ Vendor Libraries:
 
 ### Slither
 
-We don’t actually run slither locally but it’s part of the CI thru Github Action. For slither related findings/reports, all of them are known and part of the design (like sending ether to arbitrary address, which is required for the protocol to work) (edited)
+We don’t actually run slither locally but it’s part of the CI thru Github Action. For slither related findings/reports, all of them are known and part of the design (like sending ether to arbitrary address, which is required for the protocol to work) (edited) -->
