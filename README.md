@@ -1,13 +1,10 @@
 # Redacted Code Blue Details
 
 - Max Bounty: $500,000 worth of WETH
-  - Max Critical Bounty: $500,000 worth of WETH
-  - Max High Bounty: $30,000 worth of WETH
-  - Other Bounties: Up to $10,000 worth of WETH based on severity
 - Join [C4 Discord](https://discord.gg/code4rena) to register
 - Submit findings [using the C4 form](https://code4rena.com/contests/YYYY-MM-AuditName/submit) - TODO (need submission form link which may follow a different format)
 - [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
-- Starts December 15, 2023 20:00 UTC
+- Starts December 19, 2023 20:00 UTC
 
 ❗ _Note for participants: The sponsor's repo, scope definition, and contents herein are all subject to change._
 
