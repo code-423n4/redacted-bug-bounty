@@ -1,10 +1,15 @@
 # Redacted Code Blue Details
 
-- Max Bounty: $500,000 worth of WETH
+- Max Bounty: $500,000 until TVL > $5,000,000
+  - Max Critical: $500,000 in ETH
+  - High Severity: $30,000 in ETH
+- Once TVL > $2,000,000
+  - 10% of impacted TVL
+  - High severity: $50,000
 - Join [C4 Discord](https://discord.gg/code4rena) to register
 - Submit findings [using the C4 form](https://code4rena.com/contests/YYYY-MM-AuditName/submit) - TODO (need submission form link which may follow a different format)
-- [Read our guidelines for more details](https://docs.code4rena.com/roles/wardens) - TODO (need bug bounty guidelines)
-- Starts December 19, 2023 20:00 UTC
+- [Read our Code4rena Blue guidelines for more details](https://docs.google.com/document/d/1jzNh1Bat5iK6ryqvQ41_8GQjQ-ifxhHDlFINL_uijr4/edit?usp=sharing)
+- Starts December 20, 2023 20:00 UTC
 
 ❗ _Note for participants: The sponsor's repo, scope definition, and contents herein are all subject to change._
 
