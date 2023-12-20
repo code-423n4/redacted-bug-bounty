@@ -3,8 +3,8 @@
 - Max Bounty: $500,000 until TVL > $5,000,000
   - Max Critical: $500,000 in ETH
   - High Severity: $30,000 in ETH
-- Once TVL > $2,000,000
-  - 10% of impacted TVL
+- Once TVL > $5,000,000
+  - Max Critical: 10% of impacted TVL, with a maximum payout of $2,000,000 in ETH
   - High severity: $50,000 in ETH
 - Join [C4 Discord](https://discord.gg/code4rena) to register
 - Submit findings [using the C4 form](https://code4rena.com/bounties/redacted-cartel/submit)
