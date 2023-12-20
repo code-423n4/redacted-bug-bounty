@@ -142,14 +142,6 @@ Vendor Libraries:
 
 - In the event of DOS, we would consider a finding to be valid if it is reproducible for a minimum duration of 4 hours.
 
-<!-- Note: will add retroactively
-
-## Attack ideas (Where to look for bugs)
-
-- Where funds are entering/exiting protocol
-
--->
-
 ## Main invariants
 
 - Setting and updating contract addresses (`pxETH` address, etc) which are controlled by the `DEFAULT_ADMIN_ROLE`
@@ -175,18 +167,3 @@ Vendor Libraries:
 - Does it use an oracle?: Yes - Chainlink for triggering dissolve validator
 - Does it use a side-chain?: No
 - Describe any specific areas you would like addressed:
-
-<!-- Note: Our public repo does not currenly include tests, but we will provide access and instructions to wardens.
-
-# Tests
-
-### Foundry
-
-- Install dependencies `npm i`
-- Install forge thru Foundry (see: https://github.com/foundry-rs/foundry)
-- Make sure to fill out `scripts/loadEnv.sh` with the correct env variables as seen in `loadEnv.example.sh`
-- Run the test with `scripts/forgeTest.sh`
-
-### Slither
-
-We don’t actually run slither locally but it’s part of the CI thru Github Action. For slither related findings/reports, all of them are known and part of the design (like sending ether to arbitrary address, which is required for the protocol to work) (edited) -->
