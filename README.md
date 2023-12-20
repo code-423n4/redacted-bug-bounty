@@ -1,6 +1,6 @@
 # Dinero Bounty Details
 
-- Max Bounty: Until TVL > $5,000,000
+- Until TVL > $5,000,000
   - Max Critical: $500,000 in ETH
   - High Severity: $30,000 in ETH
 - Once TVL > $5,000,000
