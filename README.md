@@ -167,3 +167,7 @@ Vendor Libraries:
 - Does it use an oracle?: Yes - Chainlink for triggering dissolve validator
 - Does it use a side-chain?: No
 - Describe any specific areas you would like addressed:
+
+## Miscellaneous
+
+Employees of Redacted Finance, and employees' family members are ineligible for bounties. 
