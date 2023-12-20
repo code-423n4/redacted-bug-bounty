@@ -1,4 +1,4 @@
-# Redacted Code Blue Details
+# Dinero Code Blue Details
 
 - Max Bounty: $500,000 until TVL > $5,000,000
   - Max Critical: $500,000 in ETH
