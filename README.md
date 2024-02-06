@@ -14,7 +14,7 @@
 
 ## Publicly Known Issues
 
-- All issues submitted via wardens and the Blue Team during this Code4rena Blue engagement will be added to this [project list](https://github.com/orgs/code-423n4/projects/24/views/1).
+- All issues submitted via wardens and the Blue Team during this Code4rena Blue engagement will be added to this [project list](https://github.com/orgs/code-423n4/projects/24/views/1) weekly.
 
 - **Centralization Risks**: Some methods (such as `emergencyWithdraw`) are only accessible by the Redacted DAO multisig, which is the sole owner of the contracts. This is acceptable as the multisig is controlled by the Redacted DAO, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
 
