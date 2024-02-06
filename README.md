@@ -14,6 +14,8 @@
 
 ## Publicly Known Issues
 
+- All issues submitted via wardens and the Blue Team during this Code4rena Blue engagement will be added to this [project list](https://github.com/orgs/code-423n4/projects/24/views/1).
+
 - **Centralization Risks**: Some methods (such as `emergencyWithdraw`) are only accessible by the Redacted DAO multisig, which is the sole owner of the contracts. This is acceptable as the multisig is controlled by the Redacted DAO, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
 
 - **ERC-1155 Mint Re-entrancy**: The contract is not vulnerable to reentrancy attacks because the contract does not hold any funds and does not call any external contracts in the same transaction as the mint call. The contract is also not vulnerable to re-entrancy attacks because the contract does not use any state variables that can be modified by an external contract in the same transaction as the mint call.
