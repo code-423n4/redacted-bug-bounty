@@ -42,7 +42,7 @@ When depositing ETH, users can choose between holding pxETH or depositing to an 
 
 ### Deposits and the ETH Buffer
 
-Most ETH deposited into the Dinero protocol via Pirex ETH is staked on the Ethereum network. However, a small fraction remains in an "ETH buffer" instead of being staked. This buffer facilitates smooth staking and unstaking, allows faster ETH withdrawals when it has funds, and will support self-contained meta transactions through the Redacted Relayer RPC in the future.
+Most ETH deposited into the Dinero protocol via Pirex ETH is staked on the Ethereum network. However, a small fraction remains in an "ETH buffer" instead of being staked. This buffer facilitates smooth staking and unstaking, allows faster ETH withdrawals when it has funds, and will support self-contained meta transactions through the Dinero Relayer RPC in the future.
 
 ### Withdrawals
 
