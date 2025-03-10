@@ -11,58 +11,96 @@
 - [Read our Code4rena Blue guidelines for more details](https://docs.google.com/document/d/1jzNh1Bat5iK6ryqvQ41_8GQjQ-ifxhHDlFINL_uijr4/edit?usp=sharing)
 
 ❗ _Note for participants: The sponsor's repo, scope definition, and contents herein are all subject to change._
-
 ## Publicly Known Issues
 
-- All issues submitted via wardens and the Blue Team during this Code4rena Blue engagement will be added to this [project list](https://github.com/orgs/code-423n4/projects/24/views/1) weekly.
+- All issues submitted via wardens and the Blue Team during this Code4rena Blue engagement will be added to this [project list]() weekly.
 
-- **Centralization Risks**: Some methods (such as `emergencyWithdraw`) are only accessible by the Dinero Protocol multisig, which is the sole owner of the contracts. This is acceptable as the multisig is controlled by the Dinero Protocol, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
+- **Centralization Risks**: Some methods (specially `upgradeAndCall`) are only accessible by the Dinero DAO multisig, which is the sole owner of the contracts. This is acceptable as the multisig is controlled by the Dinero DAO, which is a decentralized organization. These methods would only be used for emergency purposes, such as in the event of a critical bug or a hack.
 
-- **ERC-1155 Mint Re-entrancy**: The contract is not vulnerable to reentrancy attacks because the contract does not hold any funds and does not call any external contracts in the same transaction as the mint call. The contract is also not vulnerable to re-entrancy attacks because the contract does not use any state variables that can be modified by an external contract in the same transaction as the mint call.
+- **Pirex ETH Liquidity**: While `brandedETH` is immediately minted on the L2 network, the actual `ETH` is batched and sent over the native bridge. This means there is a period where `pxETH` is minted, but the `ETH` is not yet available in the `PirexETH` contract. Although users should receive the full withdrawal in `pxETH` at all times, attempts to redeem `pxETH` for `ETH` before the `ETH` is available may fail. This will depend on the redemption size and the amount of `ETH` deposited into the `PirexETH` validators.
 
-- **Deposit Front Running**: This issue is mitigated by pushing all validators into queue via access control once they have an effective balance of 1 ETH, meaning they have already been registered with the canonical beacon chain deposit contract.
+- **Branded LST Yield Dilution**: `brandedETH` users' balances are adjusted according to the yield accrued in the `apxETH` vault, which is determined by `ETH` rewards from `PirexETH` validators that increase the vault's `assetsPerShare` ratio. From the perspective of `brandedETH` users, yield can start accruing immediately after a deposit through a rebase. However, since the `ETH` deposited direclty on L2 is not immediately available to stake due to the native bridge delay, the yield gets diluted. This dilution issue is constrained to `brandedETH` users because the deposit into the `apxETH` vault is delayed until `ETH` reaches L1, and the `assetsPerShare` ratio synced between L1 and L2 considers balances in `apxETH` and `pxETH` held by the lockbox.
 
-- **Allowances and `OPERATOR_ROLE`**: The `OPERATOR_ROLE` is able to set allowances for `pxETH`. This role _only_ given to the `PirexETH` contract and is used to facilitate fee distribution. The `OPERATOR_ROLE` is not given to any external contracts or accounts.
+- **Out of Gas During Withdrawal**: Pending sync batches amounts are consumed during the withdrawal through the `syncIndexPendingAmount` array. If there are many pending syncs, A large withdrawal would cause iterating over many items of the array, which would cost much gas, and could block users from withdrawing due to out-of-gas error. The likelihood of this scenario happening is directly correlated with the `minSyncAmount` set by the protocol team. The protocol team should set the `minSyncAmount` and monitor L2 deposits to ensure the system can handle large withdrawal amounts.
 
-- **Effects of `setContract` on State**: Changing withdrawal credentials aka the `rewardRecipient` contract address could corrupt state. For example, if there are initialised validators and `rewardRecipient` is changed via `setContract`, then functions like `getInitializedValidatorAt` may return incorrect withdrawal credentials. This is mitigated by the fact that `setContract` can ony be called by the owner (Dinero Protocol multisig) which does extensive due diligence before executing any transactions, and `rewardRecipient` is not expected to change.
+- **Oracle Dependency**: Users rely on the `L2ExchangeRateProvider` contract to fetch the `assetsPerShare` ratio of the AutoPxEth vault during deposits. If the oracle fails to provide accurate data, it could severely impact both users and the protocol. Potential consequences include discrepancies in asset valuation or unbacked Branded LST tokens. The protocol team must monitor the oracle closely to ensure its accuracy and reliability, as failures could compromise the system's integrity and user trust.
 
-> Note: We have acknowledged all findings in referenced Audits and have either fixed them or have mitigated them. These functions are required for the protocol to work as intended.
+- **Delayed Rebase**: If the rebase is not called for a long time, the `assetsPerShare` ratio on L2 will be outdated. This could lead to a discrepancy between the actual `AutoPxEth` vault yield and the yield accrued by the `brandedETH` holders, affecting negatively users' yield. The protocol team should monitor the rebase calls and ensure that they are called regularly and close to Harvest events.
 
-# Pirex ETH Overview
+- **PirexETH Deposit Fee Increase**: Increase in the `PirexETH` deposit fee, while there are `ETH` pending deposits in the native bridge, could lead to unbacked `pxETH` tokens. The tokens can be minted if the deposit fee (on PirexEth) is increased between the delivery of fast and slow sync messages. This would happen because the amount of `pxETH` minted after the fast message is received would be higher than the amount of `pxETH` burned when the slow message is received. While `PirexETH` team does not plan to increase the deposit fee, the protocol team should monitor the deposit fee and ensure that it is not increased while there are pending deposits in the native bridge.
 
-Pirex ETH is built on top of the Dinero Protocol’s Pirex platform and forms the foundation of the Dinero protocol. It is a two-token system built around ETH staking, consisting of pxETH and apxETH, tailored for different user preferences. This design gives users a choice: pxETH for liquidity or apxETH for boosted ETH staking yield.
+- **Slippage Protection on Non Native Deposits**: Users must carefully set the `minAmountOut` parameter when depositing WETH on L2. Since Stargate pools can be manipulated, the actual `amountOut` could be significantly lower than `amountIn` without proper slippage protection.
 
-### `pxETH` and `apxETH`
+> Note: We have acknowledged all findings in referenced [Audits](branded-lst.md#L58
+) and have either fixed them or have mitigated them. These functions are required for the protocol to work as intended.
 
-When depositing ETH, users can choose between holding pxETH or depositing to an auto compounding rewards vault for apxETH.
+# Branded LST Overview
 
-- **pxETH** is for those willing to forgo staking yield for liquidity. When users choose to hold pxETH, they’re opting to hold an ETH-pegged asset that can take advantage of opportunities throughout DeFi. These include providing liquidity, participating in lending protocols, and more. The Dinero Protocol will be using its treasury and BTRFLY incentives to expand such opportunities for pxETH holders.
+The Branded LST is an extension of the `PirexETH` protocol on a Layer 2 (L2) ecosystem. Instead of holding the `AutoPxEth` vault shares on Layer 1 (L1), users can hold the liquid staking token (LST) on L2 and benefit from the `apxETH` yield. 
 
-- **apxETH** is for users focused on maximizing their staking yields. After minting pxETH, users can deposit to Dinero's auto-compounding rewards vault to enjoy boosted staking yields without the hassle of running their own validators. Since some users will choose to hold pxETH, each apxETH benefits from staking rewards from more than one staked ETH, amplifying the yield for apxETH users.
+The LST can be obtained by performing a deposit on either L1 or L2. On L1, the accepted tokens include Ether, `pxETH`, and `apxETH`, while on L2, whitelisted token such as Ether and `WETH` are accepted. Unlike deposits, the withdrawals can be initiated exclusively from the L2 side. In exchange for the LST, users receive the same amount of `pxETH`, in a 1:1 ratio. The `pxETH` can be redeemed for Ether at any time, and the redemption rate is always 1:1 on Pirex ETH protocol.
 
-### Deposits and the ETH Buffer
+### Tokenization
 
-Most ETH deposited into the Dinero protocol via Pirex ETH is staked on the Ethereum network. However, a small fraction remains in an "ETH buffer" instead of being staked. This buffer facilitates smooth staking and unstaking, allows faster ETH withdrawals when it has funds, and will support self-contained meta transactions through the Dinero Relayer RPC in the future.
+- **brandedLST** is a rebasing Ethereum liquid staking token native to a Layer 2 ecosystem. Branded ETH benefits from `apxETH` yield and maintains an 1:1 redemption rate with `pxETH`. Rebases are permissionless and triggered on mainnet to adjust the `assetsPerShare` ratio on L2.
 
-### Withdrawals
+- **wBrandedLST** is a wrapped version of brandedLST that can be used in DeFi applications. It is minted by depositing brandedLST into the `WrappedLiquidStakedToken` contract. The minted wBrandedLST can be used in DeFi applications, such as lending, borrowing, and trading.
 
-There are limits on the rate at which validators can enter and exit the Ethereum network, based on the total number of validators. Therefore, if there is a significant ETH unstaking queue, this can hamper the timeliness of ETH withdrawals from the Dinero protocol from the spinning down of validators. In these circumstances, an incentivized withdrawal pool can be used to improve pxETH liquidity from ETH unstaking.
+- **Branded LST OFT** is the 1:1 representation of wBrandedLST on another L2 chain. It is minted by depositing wBrandedLST into the `OFTLockbox` contract. The minted Branded LST OFT can be used in DeFi applications on the other L2 chain.
 
-Users can deposit ETH into a pool and receive rewards whilst they provide liquidity to that pool. Where there is an unstaking queue and ETH from the spinning down of validators is not readily available, ETH from this pool is provided to users in exchange for pxETH, with the exchange rate or price being determined by demand for ETH from the pool. As pxETH is redeemed and validators are spun down, ETH is replenished in the pool. Depositors into the withdrawal pool therefore receive rewards in exchange for potential ETH illiquidity.
+## Architecture
+The following sections delve into the system’s components and their interactions. The diagram below showcases a high-level view of the system’s architecture.
 
-As pricing depends on the demand for ETH in the pool, rewards on deposited ETH increase during periods of high demand, allowing the pool to scale when demand is high. This makes liquidity provision more efficient and cost effective.
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/cf37d8d8-1660-4ac5-9a74-04b70e85ba71">
 
-### Yield Stripping (Coming Soon)
+Fig. 1: L2 `brandedETH` architecture
 
-Yield from apxETH can be tokenized via yield stripping. For example, if a user wants to tokenize 1 year of yield for 1 pxETH deposited in the rewards vault, they can exchange 1 pxETH for:
+### Deposit
+**Layer 1 deposits** are facilitated through the `LiquidStakingTokenLockbox` contract. The Lockbox is responsible for handling the Ether, `pxETH`, and `apxETH` token deposits into the `PirexETH` protocol. Communication between L1 and L2 is done with the LayerZero messaging system. During the deposit, the Lockbox sends the LayerZero message to the L2 chain containing the deposit amount, current `assetsPerShare`, receiver address and the lastest fully synced batches. The `LiquidStakingToken` contract that receives this message on L2 can use the provided information to mint an appropriate amount of LST shares as well as perform a rebase using the new `assetsPerShare` ratio from the `AutoPxEth` vault.
 
-- 1 pxETH principal semi-fungible token which can be exchanged for 1 pxETH in one year; and
-- 1 pxETH yield semi-fungible token for each rewards period in the next year, which can be exchanged for the rewards earned by 1 pxETH in the rewards vault in one rewards period.
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/1648793f-6909-48d5-809c-c009c24899e4">
 
-Users decide how many reward cycles they tokenize. These tokens can be used throughout DeFi and are tradable. Yield stripping provides users the ability to leverage, hedge, and speculate on future pxETH price and future yield.
+Fig. 2: Mainnet Deposit flow
+
+**Layer 2 deposits** are facilitated through the `LiquidStakingToken` contract using the logic of `L2SyncPool` contract. Since the L2 Ether cannot immediately be used for staking in the `PirexETH` protocol, it must be first bridged to the L1 Ether via the native Layer 2 bridge. The L2 deposits are batched together and sent to L1 during the cross-chain syncing process. The synchronization mechanism itself is explained in greater detail in the Synchronization section. Once Ether is released from the L1 native bridge, it is deposited into the `PirexETH` protocol to start the Ether staking process. The validator staking rewards generate the yield for the LST and `apxETH` token holders.
+
+<img width="70%" alt="image" src="https://github.com/user-attachments/assets/59d7154c-56d0-4894-94e4-a6045a6a2733">
+
+Fig. 3: Layer 2 Deposit flow
+
+**Side Layer 2 deposits** are facilitated through the `OFTMinter` contract. The `OFTMinter` contract is responsible for handling the deposits of LiquidStakingTokens between Layer 2s. The `OFTMinter` contract receives a deposit and fowards to the Layer 2. After receiving tha message back from the base Layer 2 the OFTs tokens are minted on the destination chain.
+
+<img width="70%" alt="image" src="https://github.com/user-attachments/assets/353653f7-2874-4468-b056-5e4f362a024d">
+
+Fig. 4: Side Layer 2 Deposit flow
+
+### Rebase
+Whenever new rewards are distributed into the `AutoPxEth` vault through the Harvest process, the price of an individual `apxETH` share increases. Since LST shares are L2 representations of the `apxETH` shares, this share price increase must also be reflected on the Layer 2 chain. The rebase mechanism informs the L2 about the newest `assetsPerShare` ratio from the `AutoPxEth` vault. The current L1 share price is used to update the internal accounting on L2. Similarly to the synchronization mechanism, calling `LiquidStakingTokenLockbox.rebase(...)` is permissionless but will be regularly called by the Keeper.
+
+<img width="85%" alt="image" src="https://github.com/user-attachments/assets/77cc6684-eba4-4513-bb34-079b97de5f0d">
+
+Fig. 4: Rebase flow
+
+### Synchronization
+The L1 chain is unaware of the user deposits on L2 until the two chains are synchronized. The syncing process can be done by calling the `LiquidStakingToken.sync(...)` function. To keep the chain states up to date, the off-chain keeper will trigger the synchronization regularly. This action is permissionless, meaning that anyone can call the sync(...) function once a certain threshold of deposits is reached (`minSyncAmount`).
+The synchronization mechanism is split into two parts: the slow sync and the fast sync. 
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/3f3f7185-635b-460c-96f5-c1e1d3393bd4">
+
+Fig. 5: Sync flow
+
+**The slow sync** process sends the native Layer 2 Ether or `WETH` to Layer 1 over the native bridge. Due to the nature of optimistic rollups and the design of the fault-proof system, this process can take up to 7 days to finalize (for OP Stack-based rollups). The message won’t be relayed during that time, and the Ether won’t be released on L1. To mitigate this limitation the message is sent via LayerZero omnichain messaging protocol to inform the L1 about the deposit on L2, this process is called fast sync.
+
+**The fast sync** The `LiquidStakingTokenLockbox` contract receives this message and mints `pxETH` tokens in anticipation of the Ether that is yet to be released from the bridge. The newly minted `pxETH` tokens stay in the contract, where they wait for the slow sync process to finish. If, during the waiting period, users request withdrawals on L2, whenever possible, they will be provided with the `pxETH` tokens from the Lockbox first instead of withdrawing funds from the `AutoPxEth` vault. The fast sync mechanism enables immediate liquidity for the L2 users without affecting the existing `AutoPxEth` deposits before the actual Ether arrives from the bridge.
+
+### Withdraw
+Unlike deposits, withdrawals can only be initiated on the L2 side. Users can call the `LiquidStakingToken.withdraw(...)` function and specify the amount of assets that they want to withdraw. Their LST shares will be burned on L2, and a withdrawal message will be sent to L1 via LayerZero. Once the `LiquidStakingTokenLockbox` contract receives the message, it will transfer the `pxETH` tokens to the user on L1. As mentioned in the previous section, the Lockbox will first attempt to use all the `pxETH` that it currently holds, and only after that will it start withdrawing additional `pxETH` tokens from the vault.
+
+<img width="100%" alt="image" src="https://github.com/user-attachments/assets/c960316c-1253-4e85-a611-e35573e20ab2">
+
+Fig. 6: Withdraw flow
 
 ## Links
-
 - **Previous audits:**
   - [Spearbit - PirexETH](https://github.com/dinero-protocol/audits/blob/master/dinero-pirex-eth/pirex-eth/spearbit.pdf) ([@spearbitdao](https://twitter.com/spearbitdao))
   - [Pashov - PirexETH](https://github.com/dinero-protocol/audits/blob/master/dinero-pirex-eth/pirex-eth/pashov.pdf) ([@pashovkrum](https://twitter.com/pashovkrum))
@@ -71,103 +109,176 @@ Users decide how many reward cycles they tokenize. These tokens can be used thro
   - [PirexETH Whitepaper](https://dinero.xyz/whitepaper)
   - [Dinero Litepaper](https://github.com/dinero-protocol/dinero-litepaper)
 - **Website:** https://dinero.xyz
-- **Twitter:** ([@dineroxyz](https://twitter.com/dinero_xyz))
+- **Twitter:** ([@dinero_xyz](https://twitter.com/dinero_xyz))
 - **Discord:** https://discord.gg/dineroxyz
 
 # Scope
 
 This is the complete list of what's in scope for this contest:
 
-| Contract                                                                                                                                      | SLOC | Purpose                                                                                                                                                                                                                                             | Libraries used                                                                                                                          |
-| --------------------------------------------------------------------------------------------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| [src/AutoPxEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/AutoPxEth.sol)                                     | 489  | This contract enables autocompounding for pxETH assets and includes various fee mechanisms.                                                                                                                                                         | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/DineroERC20.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/DineroERC20.sol)                                 | 77   | A Standard ERC20 token with minting and burning with access control.                                                                                                                                                                                | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/OracleAdapter.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/OracleAdapter.sol)                             | 112  | This contract facilitates interactions between PirexEth, the reward recipient, and oracles for managing validators.                                                                                                                                 | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)                                                        |
-| [src/PirexEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/PirexEth.sol)                                       | 552  | This contract manages various interactions with pxETH, such as deposits, redemptions, and fee adjustments.                                                                                                                                          | [solmate](https://github.com/transmissions11/solmate)                                                                                   |
-| [src/PirexEthValidators.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/PirexEthValidators.sol)                   | 1063 | This contract includes functionality for handling validator-related operations and deposits.                                                                                                                                                        | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/PirexFees.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/PirexFees.sol)                                     | 86   | This contract manages the distribution of protocol fees to assigned recipient.                                                                                                                                                                      | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| [src/PxEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/PxEth.sol)                                             | 51   | This contract manages the PxEth token, the main token for the PirexEth system used in the Dinero ecosystem. It extends the DineroERC20 contract and includes additional functionality.                                                              | None                                                                                                                                    |
-| [src/RewardRecipient.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/RewardRecipient.sol)                         | 158  | This contract manages rewards for validators and handles associated functionalities.                                                                                                                                                                | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)                                                        |
-| [src/interfaces/IDepositContract.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/interfaces/IDepositContract.sol) | 24   | This is the Ethereum 2.0 deposit contract interface.                                                                                                                                                                                                | None                                                                                                                                    |
-| [src/interfaces/IOracleAdapter.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/interfaces/IOracleAdapter.sol)     | 18   | This interface defines the methods for interacting with OracleAdapter.                                                                                                                                                                              | None                                                                                                                                    |
-| [src/interfaces/IPirexEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/interfaces/IPirexEth.sol)               | 61   | This interface defines the methods for interacting with PirexEth.                                                                                                                                                                                   | None                                                                                                                                    |
-| [src/interfaces/IPirexFees.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/interfaces/IPirexFees.sol)             | 23   | This interface defines functions related to the distribution of fees in the Pirex protocol.                                                                                                                                                         | None                                                                                                                                    |
-| [src/interfaces/IRewardRecipient.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/interfaces/IRewardRecipient.sol) | 40   | This interface defines functions related to dissolving and slashing validators in the Pirex protocol.                                                                                                                                               | None                                                                                                                                    |
-| [src/libraries/DataTypes.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/libraries/DataTypes.sol)                 | 87   | This library provides data structures and enums crucial for the functionality of the Pirex protocol.                                                                                                                                                | None                                                                                                                                    |
-| [src/libraries/Errors.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/libraries/Errors.sol)                       | 204  | This interface defines errors that might occur in the PirexEth system.                                                                                                                                                                              | None                                                                                                                                    |
-| [src/libraries/ValidatorQueue.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol)       | 347  | This library provides functions for adding, swapping, and removing validators in the validator queue. It also includes functions for popping validators from the end of the queue, retrieving validator information, and clearing the entire queue. | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)                                                        |
-| [src/tokens/UpxEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                             | 127  | This is a semi-fungible ERC1155 token contract with minting and burning capabilities, using AccessControl for role-based access.                                                                                                                    | [openzeppelin-contracts](https://github.com/OpenZeppelin/openzeppelin-contracts), [solmate](https://github.com/transmissions11/solmate) |
-| Total                                                                                                                                         | 3519 |                                                                                                                                                                                                                                                     |                                                                                                                                         |
+| File                                               | nSLOC | Purpose                                                                                                                                                                                                                                                             | Capabilities | External Libraries                          |
+|----------------------------------------------------|-------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|--------------------------------------------------|
+| src/layer2/DineroERC20RebaseUpgradeable.sol        | 131   | Interest-bearing ERC20-like token for LiquidStakingToken assets. DineroERC20Rebase balances are dynamic and represent the holder's share in the total amount of pxETH assets controlled by the brandedLST.                                                        | 🖥            | openzeppelin-contracts-upgradeable, solmate      |
+| src/layer2/L1SyncPool.sol                          | 113   | Base contract for Layer 1 sync pools, Inherited by a lockbox contract that will handle the sync of balances from Layer 2 to Layer 1 anticipating the deposit of tokens during the fast sync and finalizing sync by depositing ETH to Pirex ETH during the slow sync | 🖥💰📤          | openzeppelin                                     |
+| src/layer2/L2ExchangeRateProvider.sol              | 44    | Layer 2 contract for exchange rate (assetsPerShare) and fee calculation                                                                                                                                                                                             |              | openzeppelin                                     |
+| src/layer2/L2SyncPool.sol                          | 220   | Base contract for Layer 2 sync pools, allows users to deposit tokens on Layer 2, and then sync them to Layer 1. Once enough tokens have been deposited, anyone can trigger a sync to Layer 1.                                                                       | 🖥💰           | openzeppelin                                     |
+| src/layer2/LiquidStakingTokenCompose.sol           | 46    | An DineroERC20Rebase OApp contract for handling LST operations between Layer 2 and mainnet. It can send compose calls to allow composability with other Layer 2s.                                                                                                   |              |                                                  |
+| src/layer2/LiquidStakingTokenLockbox.sol           | 433   | An OApp contract for handling LST operations between mainnet and Layer 2. It holds pxETH and apxETH shares to enable withdraw of branded LST.                                                                                                                       | 🖥💰           | openzeppelin-contracts-upgradeable, openzeppelin |
+| src/layer2/LiquidStakingTokenLockboxCompose.sol    | 494   | An OApp contract for handling LST operations between mainnet and Layer 2. It holds pxETH and apxETH shares to enable withdraw of branded LST. Enables sending compose calls.                                                                                        | 🖥💰           | openzeppelin-contracts-upgradeable, openzeppelin |
+| src/layer2/MultichainLockbox.sol                   | 185   | An OApp contract for handling LST operations between mainnet and Layer 2. This contract is responsible for handling deposits of LiquidStakingTokens between mainnet and Layer 2s.                                                                                   | 🖥💰           |                                                  |
+| src/layer2/oft/OFTLockbox.sol                      | 101    | The OFTLockbox contract is responsible to hold wLST tokens and mint wLST OFTs on the destination chain.                                                                                                                                                             | 🖥💰           | openzeppelin                                     |
+| src/layer2/oft/OFTMinter.sol                       | 76    | A contract for minting OFT tokens on the destination chain.                                                                                                                                                                                                         | 💰            | openzeppelin                                     |
+| src/layer2/RateLimiter.sol                         | 31    | A contract for rate limiting the amount of tokens that can be withdrawn to Layer 1                                                                                                                                                                                  |              | openzeppelin                                     |
+| src/layer2/receivers/L1ArbReceiverETH.sol          | 36    | This contract receives messages from the Arbitrum based Layer 2 messenger and forwards them to the Layer 1 sync pool                                                                                                                                                | 💰            |                                                  |
+| src/layer2/receivers/L1OPReceiverETH.sol           | 35    | This contract receives messages from the Optimism based Layer 2 messenger and forwards them to the Layer 1 sync pool                                                                                                                                                | 💰            |                                                  |
+| src/layer2/receivers/L1StargateReceiverETH.sol     | 74    | This contract receives WETH from the stargate bridge, unwraps and forwards them to the Layer 1 sync pool                                                                                                                                                            | 🖥💰           |                                                  |
+| src/layer2/receivers/L1ZkReceiverETH.sol           | 123   | This contract receives messages from the ZKSync based Layer 2 messenger and forwards them to the Layer 1 sync pool                                                                                                                                                  | 🖥💰           |                                                  |
+| src/layer2/receivers/L2OrbitReceiver.sol           | 76    | This contract receives messages from the Orbit based Layer 3 messenger and forwards them to the Layer 2 Arbitrum receiver                                                                                                                                           | 🖥💰           |                                                  |
+| src/layer2/tokens/LiquidStakingTokenArb.sol        | 20    | Inherits LiquidStakingToken to enable sending ETH through Arbitrum native bridge to Layer 1                                                                                                                                                                         |              |                                                  |
+| src/layer2/tokens/LiquidStakingTokenNonNative.sol  | 34    | Inherits LiquidStakingToken to enable sending ETH through a bridge adapter (e.g. Stargate) native bridge to Layer 1                                                                                                                                                 |              | openzeppelin                                     |
+| src/layer2/tokens/LiquidStakingTokenOP.sol         | 24    | Inherits LiquidStakingToken to enable sending ETH through Optimism native bridge to Layer 1                                                                                                                                                                         |              |                                                  |
+| src/layer2/tokens/LiquidStakingTokenOrbit.sol      | 104   | Inherits LiquidStakingToken to enable sending ETH through Orbit chain native bridge to Arbitrum                                                                                                                                                                     |              | openzeppelin                                     |
+| src/layer2/tokens/OrbitLST.sol                     | 20    | Inherits LiquidStakingTokenCompose to enable sending ETH through Arbitrum native bridge to Layer 1                                                                                                                                                                  |              |                                                  |
+| src/layer2/tokens/SuperLST.sol                     | 24    | Inherits LiquidStakingTokenCompose to enable sending ETH through Optimism native bridge to Layer 1                                                                                                                                                                  |              |                                                  |
+| src/layer2/tokens/ZKSyncLST.sol                    | 20    | Inherits LiquidStakingTokenCompose to enable sending ETH through ZKSync native bridge to Layer 1.                                                                                                                                                                   |              |                                                  |
+| src/layer2/utils/Oracle.sol                        | 33    | Oracle contract for providing assetPerShare feeds.                                                                                                                                                                                                                  | 🧮            | openzeppelin                                     |
+| src/layer2/utils/stargate/StargateAdapter.sol      | 162   | Bridge adapter to send ETH to mainnet using Stargate bridge.                                                                                                                                                                                                        | 💰            | openzeppelin                                     |
+| src/layer2/utils/stargate/StargateBridgeQuoter.sol | 63    | Bridge quoter to get the stargate quote for bridging, used to get the correct amount to deposit.                                                                                                                                                                    |              | openzeppelin, solmate                            |
+| src/layer2/WrappedLiquidStakedToken.sol            | 77    | Wraps the LiquidStakingToken contract.                                                                                                                                                                                                                              | 🖥📤           | openzeppelin-contracts-upgradeable               |
+
+
 
 This is a list of mainnet contract deployments:
+**Plume Staked Ether (pETH)**
+| Contract                                    | Deployment                                                                                                                                                | Network          |
+|---------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|
+| src/layer2/LiquidStakingTokenLockbox.sol    | [0x043eF1DC118b5039203AECfAc680CEA4E58b0eBb](https://etherscan.io/address/0x043ef1dc118b5039203aecfac680cea4e58b0ebb)                                     | Ethereum Mainnet |
+| src/layer2/receivers/L1ArbReceiverETH.sol   | [0x3dCee1719844bdeBb1536Cf77A3017670AFDF0c5](https://etherscan.io/address/0x3dCee1719844bdeBb1536Cf77A3017670AFDF0c5)                                     | Ethereum Mainnet |
+| src/layer2/tokens/LiquidStakingTokenArb.sol | [0xcab283e4bb527Aa9b157Bae7180FeF19E2aaa71a](https://explorer-plume-mainnet-0.t.conduit.xyz/address/0xcab283e4bb527Aa9b157Bae7180FeF19E2aaa71a)           | Plume Mainnet    |
+| src/layer2/WrappedLiquidStakedToken.sol     | [0xD630fb6A07c9c723cf709d2DaA9B63325d0E0B73](https://phoenix-explorer.plumenetwork.xyz/address/0xD630fb6A07c9c723cf709d2DaA9B63325d0E0B73?tab=read_proxy) | Plume Mainnet    |
+| src/layer2/L2ExchangeRateProvider.sol       | [0x4aC328C4708DbBDbE42E4BB8602e76B6F4dEE34C](https://explorer-plume-mainnet-0.t.conduit.xyz/address/0x4aC328C4708DbBDbE42E4BB8602e76B6F4dEE34C)           | Plume Mainnet    |
+| src/layer2/RateLimiter.sol                  | [0x77Cf899591d3258AbC5cFb4Ec3c2b37D4507b0fE](https://explorer-plume-mainnet-0.t.conduit.xyz/address/0x77Cf899591d3258AbC5cFb4Ec3c2b37D4507b0fE)           | Plume Mainnet    |
+| src/layer2/utils/Oracle.sol                 | [0x7D7A470b57C7098DB6F95ab3963cE0A85f64b7c7](https://explorer-plume-mainnet-0.t.conduit.xyz/address/0x7D7A470b57C7098DB6F95ab3963cE0A85f64b7c7)           | Plume Mainnet    |
 
-| Contract                                                                                                                                | Documentation                                                                                                                              | Mainnet Deployment                                                                                                                               |
-| --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [src/AutoPxEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/AutoPxEth.sol)                               | [AutoPxEth.sol](https://dinero.xyz/docs/auto-px-eth-sol)                                                                            | [0x9Ba021B0a9b958B5E75cE9f6dff97C7eE52cb3E6](https://etherscan.io/address/0x9Ba021B0a9b958B5E75cE9f6dff97C7eE52cb3E6) |
-| [src/OracleAdapter.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/OracleAdapter.sol)                       | [OracleAdapter](https://dinero.xyz/docs/oracle-adapter-sol)                                                                         | [0x15f1203aFb3Ba2BFf383Dc0a3d5a781DedEB44fC](https://etherscan.io/address/0x15f1203aFb3Ba2BFf383Dc0a3d5a781DedEB44fC) |
-| [src/PirexEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/PirexEth.sol)                                 | [PirexEth.sol](https://dinero.xyz/docs/pirex-eth-sol)                                                                               | [0xD664b74274DfEB538d9baC494F3a4760828B02b0](https://etherscan.io/address/0xD664b74274DfEB538d9baC494F3a4760828B02b0) |
-| [src/PirexFees.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/PirexFees.sol)                               | [PirexFees.sol](https://dinero.xyz/docs/pirex-fees-sol)                                                                             | [0x177D685384AA1Ac5ABA41b7E649F9fA0Be717fdb](https://etherscan.io/address/0x177D685384AA1Ac5ABA41b7E649F9fA0Be717fdb) |
-| [src/PxEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/PxEth.sol)                                       | [PxEth.sol](https://dinero.xyz/docs/px-eth-sol)                                                                                     | [0x04C154b66CB340F3Ae24111CC767e0184Ed00Cc6](https://etherscan.io/address/0x04C154b66CB340F3Ae24111CC767e0184Ed00Cc6) |
-| [src/RewardRecipient.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/RewardRecipient.sol)                   | [RewardRecipient.sol](https://dinero.xyz/docs/reward-recipient-sol)                                                                 | [0xCd615270aB3a7a3A262A4E49935D002278C76b78](https://etherscan.io/address/0xCd615270aB3a7a3A262A4E49935D002278C76b78) |
-| [src/libraries/ValidatorQueue.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol) | (Implementation) [ValidatorQueue.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/libraries/ValidatorQueue.sol) | [0x9E0d7D79735e1c63333128149c7b616a0dC0bBDb](https://etherscan.io/address/0x9E0d7D79735e1c63333128149c7b616a0dC0bBDb) |
-| [src/tokens/UpxEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                       | (Implementation) [UpxEth.sol](https://github.com/dinero-protocol/pirex-eth-contracts/blob/master/src/tokens/UpxEth.sol)                    | [0x5BF2419a33f82F4C1f075B4006d7fC4104C43868](https://etherscan.io/address/0x5BF2419a33f82F4C1f075B4006d7fC4104C43868) |
+**Ink Staked Ether (iETH)**
+| Contract                                   | Deployment                                                                                                                       | Network          |
+|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|------------------|
+| src/layer2/LiquidStakingTokenLockbox.sol   | [0xf2B2BBdC9975cF680324De62A30a31BC3AB8A4d5](https://etherscan.io/address/0xf2b2bbdc9975cf680324de62a30a31bc3ab8a4d5)            | Ethereum Mainnet |
+| src/layer2/receivers/L1OPReceiverETH.sol   | [0x8a6e8E584b415352f7aAef2304945E1772f80378](https://etherscan.io/address/0x8a6e8E584b415352f7aAef2304945E1772f80378)            | Ethereum Mainnet |
+| src/layer2/tokens/LiquidStakingTokenOP.sol | [0xcab283e4bb527Aa9b157Bae7180FeF19E2aaa71a](https://explorer.inkonchain.com/address/0xcab283e4bb527Aa9b157Bae7180FeF19E2aaa71a) | Ink Mainnet      |
+| src/layer2/WrappedLiquidStakedToken.sol    | [0x11476323D8DFCBAFac942588E2f38823d2Dd308e](https://explorer.inkonchain.com/address/0x11476323D8DFCBAFac942588E2f38823d2Dd308e) | Ink Mainnet      |
+| src/layer2/L2ExchangeRateProvider.sol      | [0x4aC328C4708DbBDbE42E4BB8602e76B6F4dEE34C](https://explorer.inkonchain.com/address/0x4aC328C4708DbBDbE42E4BB8602e76B6F4dEE34C) | Ink Mainnet      |
+| src/layer2/RateLimiter.sol                 | [0x77Cf899591d3258AbC5cFb4Ec3c2b37D4507b0fE](https://explorer.inkonchain.com/address/0x77Cf899591d3258AbC5cFb4Ec3c2b37D4507b0fE) | Ink Mainnet      |
+| src/layer2/utils/Oracle.sol                | [0x7D7A470b57C7098DB6F95ab3963cE0A85f64b7c7](https://explorer.inkonchain.com/address/0x7D7A470b57C7098DB6F95ab3963cE0A85f64b7c7) | Ink Mainnet      |
+
+**ZKSync Staked Ether (zkETH)**
+| Contract                                 | Deployment                                                                                                                  | Network          |
+|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|------------------|
+| src/layer2/MultichainLockbox.sol         | [0x96B6AAE5Cdc5B6d2e1aC2EFc46162402F5a868B1](https://etherscan.io/address/0x96B6AAE5Cdc5B6d2e1aC2EFc46162402F5a868B1)       | Ethereum Mainnet |
+| src/layer2/receivers/L1ZkReceiverETH.sol | [0x3Be5A22B1B7eBadb8b582Db444cE9e6402E39570](https://etherscan.io/address/0x3Be5A22B1B7eBadb8b582Db444cE9e6402E39570)       | Ethereum Mainnet |
+| src/layer2/tokens/ZKSyncLST.sol          | [0x8b73bB0557C151Daa39b6ff556e281e445b296D5](https://explorer.zksync.io/address/0x8b73bB0557C151Daa39b6ff556e281e445b296D5) | ZKSync Era       |
+| src/layer2/WrappedLiquidStakedToken.sol  | [0xb72207E1FB50f341415999732A20B6D25d8127aa](https://explorer.zksync.io/address/0xb72207E1FB50f341415999732A20B6D25d8127aa) | ZKSync Era       |
+| src/layer2/L2ExchangeRateProvider.sol    | [0x587fA3e78E5de3ae78524Bd3b3A3763e50e50BA9](https://explorer.zksync.io/address/0x587fA3e78E5de3ae78524Bd3b3A3763e50e50BA9) | ZKSync Era       |
+| src/layer2/RateLimiter.sol               | [0xC5608A932658b23cA2803e9579ba3577B2B90159](https://explorer.zksync.io/address/0xC5608A932658b23cA2803e9579ba3577B2B90159) | ZKSync Era       |
+| src/layer2/utils/Oracle.sol              | [0xEf2cb49a39650E58fc0A2EFe379EA619e47BD052](https://explorer.zksync.io/address/0xEf2cb49a39650E58fc0A2EFe379EA619e47BD052) | ZKSync Era       |
+
+**Flare Staked Ether (flrETH)**
+| Contract                                              | Deployment                                                                                                             | Network          |
+|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|------------------|
+| src/layer2/old/LiquidStakingTokenLockbox.sol          | [0xaAA55490721b72A3112323FC274e9798796CcE85](https://etherscan.io/address/0xaAA55490721b72A3112323FC274e9798796CcE85)  | Ethereum Mainnet |
+| src/layer2/receivers/L1StargateReceiverETH.sol        | [0xc8479412404258054bea08ea2E3855C7Ba3b9434](https://etherscan.io/address/0xc8479412404258054bea08ea2E3855C7Ba3b9434)  | Ethereum Mainnet |
+| src/layer2/tokens/old/LiquidStakingTokenNonNative.sol | [0x61Ef2d1d8637Dc24e19c2C9dA8f58f6F06C3D31E](https://flarescan.com/address/0x61Ef2d1d8637Dc24e19c2C9dA8f58f6F06C3D31E) | Flare Mainnet    |
+| src/layer2/WrappedLiquidStakedToken.sol               | [0x26A1faB310bd080542DC864647d05985360B16A5](https://flarescan.com/address/0x26A1faB310bd080542DC864647d05985360B16A5) | Flare Mainnet    |
+| src/layer2/L2ExchangeRateProvider.sol                 | [0xADC20fb7Bc72243675C7cE72cCe8A1B20e2B0E82](https://flarescan.com/address/0xADC20fb7Bc72243675C7cE72cCe8A1B20e2B0E82) | Flare Mainnet    |
+| src/layer2/RateLimiter.sol                            | [0xaAA55490721b72A3112323FC274e9798796CcE85](https://flarescan.com/address/0xaAA55490721b72A3112323FC274e9798796CcE85) | Flare Mainnet    |
+| src/layer2/utils/Oracle.sol                           | [0xc8479412404258054bea08ea2E3855C7Ba3b9434](https://flarescan.com/address/0xc8479412404258054bea08ea2E3855C7Ba3b9434) | Flare Mainnet    |
+| src/layer2/utils/stargate/StargateAdapter.sol         | [0x7D7A470b57C7098DB6F95ab3963cE0A85f64b7c7](https://flarescan.com/address/0x7D7A470b57C7098DB6F95ab3963cE0A85f64b7c7) | Flare Mainnet    |
+| src/layer2/utils/stargate/StargateBridgeQuoter.sol    | [0x11476323D8DFCBAFac942588E2f38823d2Dd308e](https://flarescan.com/address/0x11476323D8DFCBAFac942588E2f38823d2Dd308e) | Flare Mainnet    |
+
+
+**Berachain Staked Ether (beraETH)**
+| Contract                                              | Deployment                                                                                                             | Network          |
+|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|------------------|
+| src/layer2/LiquidStakingTokenLockbox.sol          | [0x01D265185591d30796c11A6065DD09829F230b3e](https://etherscan.io/address/0x01D265185591d30796c11A6065DD09829F230b3e)  | Ethereum Mainnet |
+| src/layer2/receivers/L1StargateReceiverETH.sol        | [0x0128Cf30F7d53b190b3CAEc2193eC5B862E83183](https://etherscan.io/address/0x0128Cf30F7d53b190b3CAEc2193eC5B862E83183)  | Ethereum Mainnet |
+| src/layer2/tokens/old/LiquidStakingTokenNonNative.sol | [0x3B0145f3CFA64BC66F5742F512f871665309075d](https://beratrail.io/address/0x3B0145f3CFA64BC66F5742F512f871665309075d) | Berachain Mainnet    |
+| src/layer2/WrappedLiquidStakedToken.sol               | [0x6fc6545d5cDE268D5C7f1e476D444F39c995120d](https://beratrail.io/address/0x6fc6545d5cDE268D5C7f1e476D444F39c995120d) | Berachain Mainnet    |
+| src/layer2/L2ExchangeRateProvider.sol                 | [0xADC20fb7Bc72243675C7cE72cCe8A1B20e2B0E82](https://beratrail.io/address/0xADC20fb7Bc72243675C7cE72cCe8A1B20e2B0E82) | Berachain Mainnet    |
+| src/layer2/RateLimiter.sol                            | [0xaAA55490721b72A3112323FC274e9798796CcE85](https://beratrail.io/address/0xaAA55490721b72A3112323FC274e9798796CcE85) | Berachain Mainnet    |
+| src/layer2/utils/Oracle.sol                           | [0xc8479412404258054bea08ea2E3855C7Ba3b9434](https://beratrail.io/address/0xc8479412404258054bea08ea2E3855C7Ba3b9434) | Berachain Mainnet    |
+| src/layer2/utils/stargate/StargateAdapter.sol         | [0x0fEC62566754E85BafB0dA61f678daD6cb08C292](https://beratrail.io/address/0x0fEC62566754E85BafB0dA61f678daD6cb08C292) | Berachain Mainnet    |
+| src/layer2/utils/stargate/StargateBridgeQuoter.sol    | [0xcab283e4bb527Aa9b157Bae7180FeF19E2aaa71a](https://beratrail.io/address/0xcab283e4bb527Aa9b157Bae7180FeF19E2aaa71a) | Berachain Mainnet    |
+
+
+**Orbit Staked Ether (orbETH)**
+| Contract                                              | Deployment                                                                                                             | Network          |
+|-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|------------------|
+| src/layer2/MultichainLockbox.sol          | [0xD20021a84F77f184D626F2F01d50CCB2010Eacb5](https://etherscan.io/address/0xD20021a84F77f184D626F2F01d50CCB2010Eacb5)  | Ethereum Mainnet |
+| src/layer2/receivers/L1ArbReceiverETH.sol        | [0xaC0D350A18EAFB142c79338a7b723eF8761D8213](https://etherscan.io/address/0xaC0D350A18EAFB142c79338a7b723eF8761D8213)  | Ethereum Mainnet |
+| src/layer2/tokens/OrbitLST.sol | [0x8a6e8E584b415352f7aAef2304945E1772f80378](https://arbiscan.io/address0x61Ef2d1d8637Dc24e19c2C9dA8f58f6F06C3D31E) | Arbitrum Mainnet    |
+| src/layer2/WrappedLiquidStakedToken.sol               | [0xcF6C2bb97a8978321C9e207afE8A2037fa9be45C](https://arbiscan.io/address/0x26A1faB310bd080542DC864647d05985360B16A5) | Arbitrum Mainnet    |
+| src/layer2/L2ExchangeRateProvider.sol                 | [0x273a1d5b0525616d239323E67258c29Afd18fedD](https://arbiscan.io/address/address/0xADC20fb7Bc72243675C7cE72cCe8A1B20e2B0E82) | Arbitrum Mainnet    |
+| src/layer2/RateLimiter.sol                            | [0xd48b97150bB58Ca01235fC6bE8E1D4Aac29F15c3](https://arbiscan.io/address/address/0xaAA55490721b72A3112323FC274e9798796CcE85) | Arbitrum Mainnet    |
+| src/layer2/utils/Oracle.sol                           | [0x26A1faB310bd080542DC864647d05985360B16A5](https://arbiscan.io/address/address/0xc8479412404258054bea08ea2E3855C7Ba3b9434) | Arbitrum Mainnet    |
 
 ## Out of scope
 
 Contracts:
 
-- `ChainlinkFunctionsOracleAdapter.sol`
+- `BridgeQuoter.sol`
 
 Vendor Libraries:
 
 - `chainlink`
 - `solidty-cborutils`
-- `@ensdomains/buffer`
+- `layerzero`
+- `layerzero-upgradeable`
+- `zksync`
 
 # Additional Context
 
 - Trusted Roles
 
-  - `DEFAULT_ADMIN_ROLE`: Set external contract addresses
-  - `GOVERNANCE_ROLE`: Manages validator queue, set fee params, pause deposits to beacon chain deposit contract
-  - `KEEPER_ROLE`: Harvest rewards, update status when a validator is slashed and top up validator stake when active balance goes below effective balance
-  - `OPERATOR_ROLE`: Allows `PirexETH` to perform specific internal actions (eg. approve allowances for fee distribution)
-  - `ORACLE_ROLE`: Updates the state of the validator when it is dissolved
-  - `MINTER_ROLE`: Allows `PirexETH` to mint `pxETH` and `apxETH`
-  - `BURNER_ROLE`: Allows `PirexETH` to burn `pxETH` and `apxETH`
+  - `DEFAULT_ADMIN_ROLE`: Set keeper role in the Oracle contract
+  - `KEEPER_ROLE`: Set Oracle answer
+  - `SYNC_KEEPER`: Execute sync on Layer 2
+  - `OWNER`: Set OApp delegate, peers and update key parameters
+  - `DELEGATE`: Set OApp configuration
 
 - EIP Specifications:
 
-  - `pxETH`: Should comply with `ERC-20` standard
-  - `apxEth`: Should comply with `ERC-4626` standard
-  - `upxETH` (Unlocking) and `RFN` (Yield Stripping): Should comply with `ERC-1155` standard
+  - `DineroERC20RebaseUpgradeable`: Should comply with `ERC-20` standard
+  - `WrappedLiquidStakedToken`: Should comply with `ERC-20` standard
 
 - In the event of DOS, we would consider a finding to be valid if it is reproducible for a minimum duration of 4 hours.
 
 ## Main invariants
 
-- Setting and updating contract addresses (`pxETH` address, etc) which are controlled by the `DEFAULT_ADMIN_ROLE`
-- `pxETH` and `apxETH` are minted and burned in a 1:1 ratio
-- `outstandingRedemptions`
-- `pendingWithdrawal`
-- `pendingDeposits`
+- Setting and updating contract addresses (`wLST`, `peers` etc) which are controlled by the `OWNER`
+- `brandedLST.totalSupply` should not be greater than `pxETH` equivalent assets in the lockbox (under collateralization)
+- `totalShares`
+- `totalStaked`
+- `unsyncedPendingDeposit`
+- `syncedPendingDeposit`
+- `pendingDeposit`
+- `avgAssetsPerShare`
 
 ## Scoping Details
 
 - If you have a public code repo, please share it here: https://github.com/dinero-protocol/pirex-eth-contracts
-- How many contracts are in scope?: 17
-- Total SLoC for these contracts?: 3519
-- How many external imports are there?: 21
-- How many separate interfaces and struct definitions are there for the contracts within scope?: 5 interfaces & 3 structs
+- How many contracts are in scope?: 27
+- Total SLoC for these contracts?: 2776
+- How many external imports are there?: 88
+- How many separate interfaces and struct definitions are there for the contracts within scope?: 16 interfaces & 20 structs
 - Does most of your code generally use composition or inheritance?: Yes, inheritance
-- How many external calls?: 1 - Beacon Chain Deposit Contract
+- How many external calls?: 1 - Native bridge call (Arbitrum, Optimism, ZKSync), 2 - LayerZero call (`send` and `quote`), 1 Startgate bridge call (`sendToken`)
 - What is the overall line coverage percentage provided by your tests?: 99.8%
 - Is this an upgrade of an existing system?: No
-- Check all that apply (e.g. timelock, NFT, AMM, ERC20, rollups, etc.): ERC-20, ERC-1155, ERC-4626
+- Check all that apply (e.g. timelock, NFT, AMM, ERC20, rollups, etc.): ERC-20
 - Is there a need to understand a separate part of the codebase / get context in order to audit this part of the protocol?:
 - Please describe required context:
-- Does it use an oracle?: Yes - Chainlink for triggering dissolve validator
-- Does it use a side-chain?: No
+- Does it use an oracle?: Yes - Internal oracle to fetch the `assetsPerShare` ratio
+- Does it use a side-chain?: Yes
 - Describe any specific areas you would like addressed:
 
 ## Miscellaneous
